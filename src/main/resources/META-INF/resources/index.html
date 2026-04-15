@@ -17,56 +17,7 @@
         alert("메인 페이지 로딩 완료");
       }
     </script>
-    <style>
-      body {
-        background-color: #0a0e17;
-        color: #fff;
-        font-family: "Arial", sans-serif;
-      }
-      .navbar {
-        background-color: #000;
-      }
-      .hero {
-        background: linear-gradient(to bottom, #1e1e1e, #0a0e17);
-        min-height: 60vh;
-      }
-      .accent-purple {
-        color: #a020f0;
-      }
-      .accent-red {
-        color: #ff0000;
-      }
-      .card {
-        background-color: #1e1e1e;
-        border: none;
-        transition:
-          transform 0.3s,
-          box-shadow 0.3s;
-      }
-      .card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 20px rgba(160, 32, 240, 0.5);
-      }
-      .card-img-top {
-        height: 200px;
-        object-fit: cover;
-        border-radius: 10px 10px 0 0;
-      }
-      .btn-primary {
-        background-color: #a020f0;
-        border: none;
-      }
-      .btn-primary:hover {
-        background-color: #800080;
-      }
-      @media (min-width: 992px) {
-        .navbar-center-absolute {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="css/main.css">
   </head>
   <body>
     <!-- 헤더 (Navbar) -->
@@ -475,6 +426,39 @@
         </div>
       </div>
     </section>
+
+<section id="searchResults">
+  <div class="search-keyword-header">
+  <h1 id="searchKeywordDisplay"></h1>
+  </div>
+  <div class="search-body">
+    <div class="container-fluid px-0">
+      <div class="row g-0">
+
+        <div class="col-md-3 col-lg-2 search-sidebar bg-white py-4">
+          <div class="px-3 mb-3" style="font-size:0.8rem; color:#999; text-transform:uppercase; letter-spacing:0.1em;">카테고리</div>
+          <div class="search-category-item active" onclick="switchCategory('champion', this)">
+            챔피언 <span class="count" id="champCount">(0)</span>
+          </div>
+
+          <div class="search-category-item" onclick="switchCategory('news', this)">
+            뉴스 <span class="count" id="newsCount">(0)</span>
+          </div>
+        </div>
+        <div class="col-md-9 col-lg-10 search-content-area">
+          <div id="resultChampion">
+            <h5 class="mb-4" style="color:#333;">챔피언</h5>
+              <div id="championResultList"></div>
+          </div>
+          <div id="resultNews" style="display:none;">
+            <h5 class="mb-4" style="color:#333;">뉴스</h5>
+              <div id="newsResultList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
     <script src="js/search.js"></script>
   </body>
 </html>

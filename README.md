@@ -8,8 +8,6 @@
 실습 2 : HTML 기본 및 LOL 메인 화면 개발 완료!
 
 <div align="center">
-<img src="screenshots/2026-01-26 오전 9_51_43.png" width="45%" alt="실습 1 화면">
-<img src="screenshots/파일명.png" width="45%" alt="실습 2 화면">
 </div>
 <br>
 
@@ -21,8 +19,7 @@
 실습 2 : HTML 기본 및 LOL 메인 화면 개발 완료!
 
 <div align="center">
-<img src="screenshots/2026-01-26 오전 9_51_43.png" width="45%" alt="실습 1 화면">
-<img src="screenshots/파일명.png" width="45%" alt="실습 2 화면">
+
 </div>
 <br>
 
@@ -57,6 +54,13 @@
 <script src="js/bootstrap.bundle.min.js"></script>
 <script src="js/test.js"></script>
 
+<div align="center">
+<img src="/screenshots/page_loading.png" width="45%" alt="페이지 로딩창 실습 화면">
+<img src="/screenshots/search?q=.png" width="45%" alt="검색하기 누르면 구글로 이동 실습 화면">
+<img src="/screenshots/search.png" width="45%" alt="html search.js 연결 실습 화면">
+</div>
+<br>
+
 <script>
   window.onload = function() {
     alert("메인 페이지 로딩 완료");
@@ -82,3 +86,23 @@ window.open(
 "\_blank"
 );
 });
+
+## 7주차 수업 내용
+
+<div align="center">
+<img src="/screenshots/fix js.png" width="45%" alt="js 실습 화면">
+<img src="/screenshots/fix css.png" width="45%" alt="css 실습 화면">
+<img src="/screenshots/fix html.png" width="45%" alt="html 실습 화면">
+</div>
+<br>
+
+- **검색 결과(Search Results) UI 및 레이아웃 추가 (`index.html`, `css/main.css`)**
+  - `index.html` 하단에 챔피언 및 뉴스 검색 결과를 모아서 보여주는 `#searchResults` 레이아웃 도입.
+  - 전역 디자인과 재사용 가능한 컴포넌트 관리를 위해 `css/main.css` 파일을 신규 생성. 카드 호버 효과, 아웃라인 색상, 검색 카테고리 메뉴 등 전용 스타일 적용 완성.
+  - 화면 구조를 이탈시키는 부트스트랩 클래스명 오타(`cosl-lg-2` -> `col-lg-2`) 수정.
+
+- **사이트 내장 검색 기능(DOM 제어 동적 렌더링) 완성 (`search.js`)**
+  - 기존의 외부 사이트 팝업 용도로 사용되던 구글 검색 기능(더미 코드)을 삭제하고 실제 웹앱에 맞는 검색 로직으로 교체.
+  - `performSearch` 함수 내 로직 스코프 밖으로 빠져있던 코드들을 함수 내부로 올바르게 재배치하여 자바스크립트 스코프(ReferenceError) 문제 해결.
+  - JS 화면에 검색 키워드 및 결과 갯수를 출력할 때 문자열 치환이 발생하지 않는 문제(템플릿 리터럴 문법인 `` ` `` 대신 일반 따옴표 혼용 문제) 수정.
+  - 검색 수행 시 기존 메인 화면 콘텐츠 레이아웃(hero, 특징 소개 영역 등)을 숨기고 검색 결과 화면을 띄워주는 DOM 제어 스위칭 로직 안정화.
