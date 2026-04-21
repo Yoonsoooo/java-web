@@ -48,6 +48,30 @@ const CHAMPIONS = [
     img: "https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png",
     difficulty: "중",
   },
+  {
+    name: "자헨",
+    engName: "Zaahen",
+    role: "전사",
+    lane: "탑/정글",
+    img: "image/Zaahen.jpg",
+    difficulty: "중",
+  },
+  {
+    name: "멜",
+    engName: "Mell",
+    role: "마법사",
+    lane: "미드",
+    img: "image/Mell.jpeg",
+    difficulty: "상",
+  },
+  {
+    name: "유나라",
+    engName: "Yunara",
+    role: "원거리 딜러",
+    lane: "원딜",
+    img: "image/Yunara.jpg",
+    difficulty: "상",
+  },
 ];
 
 const NEWS = [
@@ -63,9 +87,21 @@ const NEWS = [
   },
 ];
 
+function showMainScreen() {
+  document.getElementById("searchResults").style.display = "none";
+  document.getElementById("searchResults").classList.add("d-none");
+  document.querySelector(".hero").classList.remove("d-none");
+  document
+    .querySelectorAll("section:not(#searchResults)")
+    .forEach((s) => s.classList.remove("d-none"));
+}
+
 function performSearch(query) {
   const q = query.trim().toLowerCase();
-  if (!q) return;
+  if (!q) {
+    showMainScreen();
+    return;
+  }
 
   document.getElementById("searchKeywordDisplay").textContent = `"${query}"`;
 
