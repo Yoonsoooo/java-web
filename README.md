@@ -206,21 +206,25 @@ MySQL 데이터베이스 연결과 API 데이터 직렬화를 위한 라이브�
 사용자 정보를 데이터베이스에 저장하고, 폼 로그인을 통해 세션을 유지하는 기반 작업을 진행했습니다.
 
 ### 1.1. `User` 엔티티 구현 (`User.java`)
+
 - `PanacheEntity`를 상속받아 사용자 객체를 정의했습니다.
 - `username`과 `password` 필드를 추가했습니다.
 - DB의 `user` 예약어 충돌을 방지하기 위해 `@Table(name = "users")` 어노테이션으로 테이블 이름을 명시적으로 지정했습니다.
 - 사용자명(username)으로 데이터를 조회하는 정적 메서드 `findByUsername(String username)`을 구현했습니다.
 
 ### 1.2. 초기 사용자 데이터 주입 (`DataSeeder.java`)
+
 - 애플리케이션 시작 시 DB에 등록된 사용자가 없다면, 기본 테스트 계정(`guest` / `123123`)을 데이터베이스에 자동 주입(Seed)하도록 로직을 추가했습니다.
 
 ### 1.3. 로그인 처리 API (`AuthResource.java`)
+
 - 로그인 폼(form) 전송을 처리하는 `@POST @Path("/login_check")` 엔드포인트를 구현했습니다.
 - 클라이언트로부터 `application/x-www-form-urlencoded` 형태로 `username`과 `password`를 전달받습니다.
 - 현재는 DB 검증 로직 적용 전 단계로, 폼 전송 시 로그인 완료 페이지(`/login/main_after_login.html`)로 자동 리다이렉트(`303 See Other`) 되도록 임시 구현되었습니다.
 - 정적 폴더(`/login`)와의 URL 라우팅 충돌 문제를 방지하기 위해 오작동하던 기존 `@GET @Path("/login")` 로직을 주석 처리했습니다.
 
 ### 1.4. 서버 세션 설정 (`SessionConfig.java`)
+
 - Vert.x의 `LocalSessionStore`를 활용하여 세션 매니저를 구성했습니다.
 - 세션 유지 시간(Timeout)을 1시간으로 설정하고, 세션 쿠키의 `HttpOnly` 속성을 활성화하여 브라우저 스크립트 기반 탈취 공격(XSS)을 방지하는 보안을 강화했습니다.
 
@@ -231,14 +235,17 @@ MySQL 데이터베이스 연결과 API 데이터 직렬화를 위한 라이브�
 로그인 후 메인 화면을 새롭게 추가하고, 각 페이지 간 이동 시 발생하는 URL 경로 및 CSS/이미지 경로 오류를 수정했습니다.
 
 ### 2.1. 로그인 후 메인 페이지 추가 (`main_after_login.html`)
+
 - 로그인이 성공했을 때 보여지는 새로운 메인 페이지를 추가 생성했습니다.
 - 기존 메인 화면 레이아웃과 동일하나, 네비게이션 바 상단에 빨간색 아웃라인의 **"로그아웃"** 버튼(`<a href="/logout">`)이 신규 추가되었습니다.
 
 ### 2.2. HTML 경로 및 정적 라우팅 오류 수정 (`index.html`, `login.html`, `download.html`)
+
 - 기존에 정적 폴더 이름(`/login`)과 JAX-RS 라우팅 주소가 겹쳐 화면이 렌더링되지 않던 버그를 해결하기 위해, 모든 로그인 링크 주소를 명확한 파일 경로(`/login/login.html`)로 일괄 수정했습니다.
 - 각 하위 폴더(`login/`, `main_page_sub/`)에 위치한 HTML 파일들이 최상위 폴더에 있는 로고 이미지, CSS, JS 리소스들을 제대로 불러올 수 있도록 상대 경로(`../`)를 올바르게 연결 보완했습니다.
 
 ### 2.3. 테마 토글 및 버튼 스타일링 보완 (`download.css`)
+
 - 기본 버튼(`btn-primary`) 색상을 브랜드 컬러인 보라색(`#a020f0`) 계열로 오버라이딩하여 UI의 통일성을 맞추었습니다.
 - 큰 해상도(lg 이상) 화면에서 네비게이션 바 리스트가 정확히 화면 중앙에 오도록 `.navbar-center-absolute` 클래스를 추가했습니다.
 - 다른 서브 페이지의 CSS에도 라이트/다크 모드 테마 토글 버튼(`#themeToggleBtn`)과 라이트 모드 배경(`body.light-mode`) 스타일을 동일하게 이식하여 모드 전환 시 UI가 깨지지 않도록 동기화했습니다.
@@ -247,3 +254,76 @@ MySQL 데이터베이스 연결과 API 데이터 직렬화를 위한 라이브�
 
 **💡 요약**
 10주차 실습은 **사용자(User) DB 설계 및 세션 기반의 로그인 처리 흐름(API/Session)** 구축이 핵심이었습니다. 더불어 프론트엔드에서는 로그인 전후 상태의 뷰(View) 분리, 폴더 계층 구조화에 따른 리소스 상대 경로 이슈 해결 및 공통 디자인 룩앤필(Look&Feel) 동기화 등을 수행하여 전체 웹 애플리케이션의 완성도를 높였습니다.
+
+# 10주차 과제
+
+`download.css` 파일에 추가해야 하는 라이트 모드 스타일 코드입니다.
+
+```css
+body.light-mode .hero {
+  background:
+  linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9)),
+  url("../image/download-banner.jpg") center/cover no-repeat;
+}
+body.light-mode .hero h1 {
+  text-shadow: none;
+  color: #a020f0;
+}
+body.light-mode .btn-outline-light {
+  color: #212529;
+  border-color: #212529;
+}
+body.light-mode .btn-outline-light:hover {
+  background-color: #212529;
+  color: #ffffff;
+}
+body.light-mode .table {
+  --bs-table-bg: #ffffff;
+  --bs-table-color: #212529;
+  --bs-table-border-color: #dee2e6;
+}
+body.light-mode .table th {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+body.light-mode .nav-tabs .nav-link {
+  color: #495057;
+}
+body.light-mode .nav-tabs .nav-link:hover {
+  border-color: #e9ecef #e9ecef #dee2e6;
+}
+body.light-mode .nav-tabs .nav-link.active {
+  background-color: #ffffff;
+  color: #a020f0;
+  border-color: #dee2e6 #dee2e6 #ffffff;
+}
+```
+
+---
+
+# 12주차 실습 내용 (클라이언트 유효성 검사 및 패스워드 해싱)
+
+이번 주차에서는 프론트엔드(JavaScript) 단에서의 사용자 입력값 유효성 검사(Validation) 및 회원가입 시 패스워드 암호화(SHA-256) 처리를 집중적으로 구현했습니다.
+
+### 1. 로그인 폼 유효성 검사 (`login.js`, `login.html`)
+- `login.html`의 입력 폼 요소에 `id="usernameInput"`, `id="passwordInput"`을 추가하여 자바스크립트에서 DOM 요소를 쉽게 제어할 수 있도록 수정했습니다.
+- 폼 전송 시 곧바로 서버로 보내지 않고 `validateAndLogin()` 함수를 호출하여 정규식 검사를 먼저 수행하도록 이벤트를 제어했습니다. (`onsubmit="event.preventDefault(); validateAndLogin();"`)
+- `login.js`를 신규 생성하여 아래 조건으로 유효성 검사를 구현했습니다.
+  - **아이디**: `/^[a-zA-Z0-9]{4,20}$/` (4~20자의 영문 및 숫자만 허용)
+  - **패스워드**: `/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/` (영문, 숫자, 특수문자를 포함한 8자 이상)
+  - 검사 실패 시 Bootstrap의 `.is-invalid` 클래스를 활용해 빨간색 경고 메시지를 화면에 즉시 노출합니다.
+
+### 2. 회원가입 폼 유효성 검사 (`input_check.js`, `register.html`)
+- `register.html`에 아이디, 패스워드, 패스워드 확인, 이메일, 연락처 필드를 구성했습니다.
+- `input_check.js` 내에 `validateAndShowModal()` 함수를 통해 항목별로 검증을 수행합니다.
+  - 패스워드 일치 여부, 이메일 형식(`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`), 전화번호 형식(`/^010-\d{4}-\d{4}$/`) 로직이 추가되었습니다.
+  - 모든 검증을 통과해야만 입력 정보를 최종 확인하는 모달(Modal) 창이 띄워집니다.
+
+### 3. 패스워드 해싱 처리 (`input_sha256.js`)
+- 브라우저 내장 Web Crypto API를 활용하여 사용자가 입력한 평문 패스워드를 클라이언트에서 SHA-256으로 단방향 해싱하는 `hashPassword` 비동기 함수를 구현했습니다.
+- 회원가입 모달 창에서 '가입하기' 버튼을 클릭하면, 평문 패스워드 대신 해싱된 암호화 값만 hidden 필드에 담겨 서버(`/register_check`)로 전송되게 하여 보안성을 높였습니다.
+
+### 4. 회원가입 및 중복 체크 백엔드 연동 (`AuthResource.java`, `User.java`)
+- `User.java` 엔티티에 `email`, `phone` 속성을 추가하고 데이터베이스에 반영했습니다.
+- `AuthResource.java`의 `/register_check` 엔드포인트에서 넘어온 폼 데이터(해시된 패스워드 포함)를 받아, DB에 이미 동일한 username이나 email이 있는지 검사합니다.
+- 중복이 없다면 새로운 `User`를 DB에 삽입하고 회원가입 완료 페이지(`/register_success`)로 이동시킵니다.
