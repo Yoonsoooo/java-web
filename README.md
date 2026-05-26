@@ -262,8 +262,8 @@ MySQL 데이터베이스 연결과 API 데이터 직렬화를 위한 라이브�
 ```css
 body.light-mode .hero {
   background:
-  linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9)),
-  url("../image/download-banner.jpg") center/cover no-repeat;
+    linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9)),
+    url("../image/download-banner.jpg") center/cover no-repeat;
 }
 body.light-mode .hero h1 {
   text-shadow: none;
@@ -306,6 +306,7 @@ body.light-mode .nav-tabs .nav-link.active {
 이번 주차에서는 프론트엔드(JavaScript) 단에서의 사용자 입력값 유효성 검사(Validation) 및 회원가입 시 패스워드 암호화(SHA-256) 처리를 집중적으로 구현했습니다.
 
 ### 1. 로그인 폼 유효성 검사 (`login.js`, `login.html`)
+
 - `login.html`의 입력 폼 요소에 `id="usernameInput"`, `id="passwordInput"`을 추가하여 자바스크립트에서 DOM 요소를 쉽게 제어할 수 있도록 수정했습니다.
 - 폼 전송 시 곧바로 서버로 보내지 않고 `validateAndLogin()` 함수를 호출하여 정규식 검사를 먼저 수행하도록 이벤트를 제어했습니다. (`onsubmit="event.preventDefault(); validateAndLogin();"`)
 - `login.js`를 신규 생성하여 아래 조건으로 유효성 검사를 구현했습니다.
@@ -314,16 +315,44 @@ body.light-mode .nav-tabs .nav-link.active {
   - 검사 실패 시 Bootstrap의 `.is-invalid` 클래스를 활용해 빨간색 경고 메시지를 화면에 즉시 노출합니다.
 
 ### 2. 회원가입 폼 유효성 검사 (`input_check.js`, `register.html`)
+
 - `register.html`에 아이디, 패스워드, 패스워드 확인, 이메일, 연락처 필드를 구성했습니다.
 - `input_check.js` 내에 `validateAndShowModal()` 함수를 통해 항목별로 검증을 수행합니다.
   - 패스워드 일치 여부, 이메일 형식(`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`), 전화번호 형식(`/^010-\d{4}-\d{4}$/`) 로직이 추가되었습니다.
   - 모든 검증을 통과해야만 입력 정보를 최종 확인하는 모달(Modal) 창이 띄워집니다.
 
 ### 3. 패스워드 해싱 처리 (`input_sha256.js`)
+
 - 브라우저 내장 Web Crypto API를 활용하여 사용자가 입력한 평문 패스워드를 클라이언트에서 SHA-256으로 단방향 해싱하는 `hashPassword` 비동기 함수를 구현했습니다.
 - 회원가입 모달 창에서 '가입하기' 버튼을 클릭하면, 평문 패스워드 대신 해싱된 암호화 값만 hidden 필드에 담겨 서버(`/register_check`)로 전송되게 하여 보안성을 높였습니다.
 
 ### 4. 회원가입 및 중복 체크 백엔드 연동 (`AuthResource.java`, `User.java`)
+
 - `User.java` 엔티티에 `email`, `phone` 속성을 추가하고 데이터베이스에 반영했습니다.
 - `AuthResource.java`의 `/register_check` 엔드포인트에서 넘어온 폼 데이터(해시된 패스워드 포함)를 받아, DB에 이미 동일한 username이나 email이 있는지 검사합니다.
 - 중복이 없다면 새로운 `User`를 DB에 삽입하고 회원가입 완료 페이지(`/register_success`)로 이동시킵니다.
+
+---
+
+# 13주차 실습 내용 정리 (동적 라우팅 및 로그인 보안 강화)
+
+이번 주차에서는 메인 페이지의 동적 라우팅 처리 및 로그인 폼에서의 클라이언트 패스워드 해싱 보안 적용을 완료했습니다.
+
+### 1. 메인 페이지 동적 라우팅 처리 (`AuthResource.java`, `main_index.html`)
+
+- **정적 파일명 변경:** 기존 최상위 경로의 정적 파일인 `index.html`을 `main_index.html`로 파일명을 변경했습니다. 이는 Quarkus가 `/` 접속 시 자동으로 `index.html`을 찾아 렌더링하는 기본 동작을 막고, JAX-RS 컨트롤러(`AuthResource`)에서 직접 라우팅을 제어하기 위함입니다.
+- **세션 기반 화면 분기:** `AuthResource.java`에 `@GET @Path("/")` 엔드포인트를 새롭게 추가했습니다.
+  - 사용자가 최상위 경로(`/`)로 접속하면 `context.session().get("loginUser")`를 통해 세션 존재 여부를 확인합니다.
+  - 로그인 상태(세션 있음)인 경우 `main_after_login.html`을 반환하고, 로그아웃 상태(세션 없음)인 경우 `main_index.html`을 반환하도록 동적 분기 처리를 구현했습니다.
+
+### 2. 로그인 폼 클라이언트 패스워드 해싱 적용 (`login.html`, `login.js`)
+
+- 12주차에서 회원가입 시 적용했던 SHA-256 단방향 해싱 암호화 로직을 로그인 폼에도 동일하게 적용했습니다. DB에 저장된 패스워드가 이미 해싱된 값이므로, 로그인 시에도 평문을 해싱하여 서버로 전송해 일치 여부를 검사해야 합니다.
+- **HTML 폼 구조 변경 (`login.html`)**:
+  - 패스워드 평문을 받는 `<input type="password" id="passwordInput">` 태그에서 `name="password"` 속성을 제거하여, 폼 전송 시 평문이 서버로 노출되지 않도록 차단했습니다.
+  - 해싱된 패스워드 값을 담아서 보낼 `<input type="hidden" id="password" name="password">` 태그를 새롭게 추가했습니다.
+  - 암호화 함수 사용을 위해 `input_sha256.js` 스크립트를 연결했습니다.
+- **비동기 해싱 및 전송 로직 구현 (`login.js`)**:
+  - 기존 폼의 기본 `submit` 동작을 차단하고, 버튼 클릭 시 `validateAndLogin()` 함수를 거치도록 수정했습니다.
+  - `submitLogin()` 함수를 `async` 비동기 함수로 변경했습니다.
+  - 사용자가 입력한 평문 패스워드를 `await hashPassword(password)`를 통해 SHA-256으로 변환한 뒤, hidden 입력 필드의 value에 넣고 `document.getElementById("loginForm").submit();`을 수동으로 호출하도록 보안 로직을 완성했습니다.
