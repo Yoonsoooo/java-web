@@ -86,3 +86,11 @@ async function submitLogin() {
   document.getElementById("password").value = hashed;
   document.getElementById("loginForm").submit();
 }
+
+window.addEventListener('load', function() {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  if (error === '1') {
+    showError("usernameInput", "usernameMsg", "아이디 또는 패스워드가 올바르지 않습니다.");
+  }
+});

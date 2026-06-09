@@ -8,6 +8,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.io.InputStream;
+import java.util.UUID;
+import java.util.Map;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 @Path("/") // 기본 경로가 최상위 /
 public class AuthResource {
@@ -63,20 +70,19 @@ public class AuthResource {
     
     @GET
     @Path("/logout")
-    public Response logout() {
+    public Response logout(@QueryParam("next") String next) {
 
-        System.out.println("=== 로그아웃 전 세션 ID : " + context.session().id());
         System.out.println("=== 로그아웃 전 세션 ID : " + context.session().id());
         System.out.println("=== 로그아웃 전 loginUser : " + context.session().get("loginUser"));
 
         context.session().destroy();
 
         System.out.println("=== 로그아웃 후 세션 ID : " + context.session().id());
-        System.out.println("=== 로그아웃 후 세션 ID : " + context.session().id());
         System.out.println("=== 로그아웃 후 loginUser : " + context.session().get("loginUser"));
 
+        String redirect = (next != null && next.equals("login")) ? "/login" : "/";
         return Response
-            .seeOther(URI.create("/"))
+            .seeOther(URI.create(redirect))
             .build();
     }
 
@@ -128,6 +134,163 @@ public class AuthResource {
             .getClassLoader()
             .getResourceAsStream("META-INF/resources/login/register_success.html");
         return Response.ok(html).build();
+    }
+
+    @GET
+    @Path("/profile")
+    @Produces(MediaType.TEXT_HTML)
+    public Response profilePage() {
+        // ① 세션 체크 (로그인 안 한 사용자 차단)
+        String loginUser = context.session().get("loginUser");
+        if (loginUser == null) {
+            return Response
+                .seeOther(URI.create("/login"))
+                .build();
+        }
+        // ② DB에서 사용자 정보 조회
+        User user = User.findByUsername(loginUser);
+
+        // ③ 세션에 사용자 정보 저장 (HTML에서 활용)
+        context.session().put("userEmail", user.email);
+        context.session().put("userPhone", user.phone);
+        context.session().put("profileImage",
+            user.profileImage != null ? user.profileImage : "default.png");
+        
+        // ④ 프로필 페이지 반환
+        InputStream html = getClass()
+            .getClassLoader()
+            .getResourceAsStream("META-INF/resources/login/profile.html");
+        return Response.ok(html).build();
+    }
+
+    @GET
+    @Path("/profile/info")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response profileInfo() {
+        // 세션 체크
+        String loginUser = context.session().get("loginUser");
+        if (loginUser == null) {
+            return Response.status(401).build();
+        }
+        // DB 조회
+        User user = User.findByUsername(loginUser);
+        // JSON 응답
+        return Response.ok(
+            Map.of(
+                "username", user.username,
+                "email", user.email != null ? user.email : "",
+                "phone", user.phone != null ? user.phone : "",
+                "profileImage", user.profileImage != null ? user.profileImage : ""
+            )
+        ).build();
+    }
+
+    @POST
+    @Path("/profile/upload")
+    @Transactional
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response profileUpload(
+        @RestForm("profileImage") FileUpload file) {
+        // ① 세션 체크
+        String loginUser = context.session().get("loginUser");
+        if (loginUser == null) {
+            return Response
+                .seeOther(URI.create("/login"))
+                .build();
+        }
+        try {
+            // ② 확장자 검사
+            String original = file.fileName();
+            String ext = original.substring(original.lastIndexOf('.') + 1).toLowerCase();
+            if (!ext.matches("jpg|jpeg|png|gif|webp")) {
+                return Response
+                    .seeOther(URI.create("/profile?error=invalid_type"))
+                    .build();
+            }
+            // ③ 파일 크기 검사 (5MB)
+            if (file.size() > 5 * 1024 * 1024) {
+                return Response
+                    .seeOther(URI.create("/profile?error=too_large"))
+                    .build();
+            }
+            // ④ UUID 파일명 생성 + 저장
+            String newFileName = UUID.randomUUID() + "." + ext;
+            java.nio.file.Path uploadDir = Paths.get("src/main/resources/META-INF/resources/uploads/profile");
+            java.nio.file.Files.createDirectories(uploadDir);
+            java.nio.file.Files.copy(file.uploadedFile(),
+                uploadDir.resolve(newFileName),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+            // ⑤ DB 업데이트
+            User user = User.findByUsername(loginUser);
+            user.profileImage = newFileName;
+
+            return Response
+                .seeOther(URI.create("/profile"))
+                .build();
+        } catch (Exception e) {
+            return Response
+                .seeOther(URI.create("/profile?error=upload_fail"))
+                .build();
+        }
+    }
+
+    @POST
+    @Path("/profile/update")
+    @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response profileUpdate(
+        @FormParam("email") String email,
+        @FormParam("phone") String phone) {
+        // ① 세션 체크
+        String loginUser = context.session().get("loginUser");
+        if (loginUser == null) {
+            return Response
+                .seeOther(URI.create("/login"))
+                .build();
+        }
+        // ② 이메일 중복 체크 (본인 제외)
+        User found = User.findByEmail(email);
+        if (found != null && !found.username.equals(loginUser)) {
+            return Response
+                .seeOther(URI.create("/profile?error=duplicate_email"))
+                .build();
+        }
+        // ③ DB 업데이트
+        User user = User.findByUsername(loginUser);
+        user.email = email;
+        user.phone = phone;
+        return Response
+            .seeOther(URI.create("/profile?success=updated"))
+            .build();
+    }
+
+    @POST
+    @Path("/profile/password")
+    @Transactional
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response profilePassword(
+        @FormParam("currentPassword") String currentPassword,
+        @FormParam("newPassword") String newPassword) {
+        // ① 세션 체크
+        String loginUser = context.session().get("loginUser");
+        if (loginUser == null) {
+            return Response
+                .seeOther(URI.create("/login"))
+                .build();
+        }
+        // ② 현재 비밀번호 확인 (해시값 비교)
+        User user = User.findByUsername(loginUser);
+        if (!user.password.equals(currentPassword)) {
+            return Response
+                .seeOther(URI.create("/profile?error=wrong_password"))
+                .build();
+        }
+        // ③ 새 비밀번호로 DB 업데이트
+        user.password = newPassword;
+        return Response
+            .seeOther(URI.create("/profile?success=password_changed"))
+            .build();
     }
 
     // GET / → 세션 유무에 따라 메인 페이지 분기
